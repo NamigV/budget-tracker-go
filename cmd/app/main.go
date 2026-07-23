@@ -10,10 +10,23 @@ import (
 	"time"
 
 	"github.com/NamigV/budget-tracker-go/internal/config"
+	"github.com/NamigV/budget-tracker-go/internal/database"
 )
 
 func main() {
 	cfg := config.Load()
+
+	db, err := database.Connect(cfg.DB)
+	if err != nil {
+		log.Fatalf("database connection failed: %v", err)
+	}
+	log.Println("database connected")
+
+	sqlDB, err := db.DB()
+	if err != nil {
+		log.Fatalf("get sql.DB failed: %v", err)
+	}
+	defer func() { _ = sqlDB.Close() }()
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /health", handleHealth)
