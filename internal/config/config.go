@@ -6,8 +6,9 @@ import (
 )
 
 type Config struct {
-	Addr string
-	DB   DatabaseConfig
+	Addr  string
+	DB    DatabaseConfig
+	Redis RedisConfig
 }
 
 type DatabaseConfig struct {
@@ -17,6 +18,12 @@ type DatabaseConfig struct {
 	Password string
 	Name     string
 	SSLMode  string
+}
+
+type RedisConfig struct {
+	Addr     string
+	Password string
+	DB       int
 }
 
 func (db DatabaseConfig) DSN() string {
@@ -36,6 +43,11 @@ func Load() Config {
 			Password: getenv("DB_PASSWORD", "budget_tracker"),
 			Name:     getenv("DB_NAME", "budget_tracker"),
 			SSLMode:  getenv("DB_SSLMODE", "disable"),
+		},
+		Redis: RedisConfig{
+			Addr:     getenv("REDIS_ADDR", "localhost:6380"),
+			Password: getenv("REDIS_PASSWORD", ""),
+			DB:       0,
 		},
 	}
 }

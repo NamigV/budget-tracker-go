@@ -1,6 +1,11 @@
 package domain
 
-import "time"
+import (
+	"errors"
+	"time"
+)
+
+var ErrInvalidTransaction = errors.New("invalid transaction")
 
 type Transaction struct {
 	ID          int64

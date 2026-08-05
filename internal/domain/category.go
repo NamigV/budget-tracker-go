@@ -7,7 +7,10 @@ import (
 	"gorm.io/gorm"
 )
 
-var ErrCategoryNotFound = errors.New("category not found")
+var (
+	ErrCategoryNotFound = errors.New("category not found")
+	ErrInvalidCategory  = errors.New("invalid category")
+)
 
 type Category struct {
 	ID        int64

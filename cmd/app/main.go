@@ -11,6 +11,10 @@ import (
 
 	"github.com/NamigV/budget-tracker-go/internal/config"
 	"github.com/NamigV/budget-tracker-go/internal/database"
+	"github.com/NamigV/budget-tracker-go/internal/service"
+	"github.com/NamigV/budget-tracker-go/internal/sessionstore"
+	"github.com/NamigV/budget-tracker-go/internal/store"
+	transporthttp "github.com/NamigV/budget-tracker-go/internal/transport/http"
 )
 
 func main() {
@@ -28,12 +32,21 @@ func main() {
 	}
 	defer func() { _ = sqlDB.Close() }()
 
-	mux := http.NewServeMux()
-	mux.HandleFunc("GET /health", handleHealth)
+	redisClient, err := sessionstore.Connect(cfg.Redis)
+	if err != nil {
+		log.Fatalf("redis connection failed: %v", err)
+	}
+	log.Println("redis connected")
+	defer func() { _ = redisClient.Close() }()
+
+	st := store.New(db)
+	sessions := sessionstore.New(redisClient)
+	svc := service.New(st, sessions)
+	h := transporthttp.New(svc)
 
 	srv := &http.Server{
 		Addr:    cfg.Addr,
-		Handler: mux,
+		Handler: h.Routes(),
 	}
 
 	serverErrors := make(chan error, 1)
@@ -63,10 +76,4 @@ func main() {
 
 		log.Println("server stopped")
 	}
-}
-
-func handleHealth(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-	w.WriteHeader(http.StatusOK)
-	_, _ = w.Write([]byte("ok\n"))
 }
